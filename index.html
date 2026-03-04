@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BraçoBot 3D — Fisioterapia Remota</title>
+
+  <!-- Fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ══════════════════════════
+       CABEÇALHO
+  ══════════════════════════ -->
+  <header>
+    <div class="hdr-dot"></div>
+    <h1>BraçoBot <em>Fisioterapia Remota</em></h1>
+    <div class="hdr-sep"></div>
+    <div class="hdr-conn">SIMULAÇÃO ATIVA</div>
+    <div class="hdr-tag">Three.js · POO · JS</div>
+  </header>
+
+  <!-- ══════════════════════════
+       ÁREA PRINCIPAL
+  ══════════════════════════ -->
+  <div class="body">
+
+    <!-- ── VISUALIZAÇÃO 3D ── -->
+    <div id="three-container">
+      <div class="view-label tl">VISUALIZAÇÃO 3D · Arraste para orbitar · Scroll para zoom</div>
+
+      <!-- Indicadores de ângulo flutuantes -->
+      <div class="angle-pills">
+        <div class="apill">
+          <div class="dot" style="background:var(--accent); box-shadow:0 0 6px var(--accent)"></div>
+          <span class="lbl">OMBRO</span>
+          <span class="val" id="pill-shoulder" style="color:var(--accent)">90°</span>
+        </div>
+        <div class="apill">
+          <div class="dot" style="background:var(--purple); box-shadow:0 0 6px var(--purple)"></div>
+          <span class="lbl">COTOVELO</span>
+          <span class="val" id="pill-elbow" style="color:var(--purple)">45°</span>
+        </div>
+        <div class="apill">
+          <div class="dot" style="background:var(--green); box-shadow:0 0 6px var(--green)"></div>
+          <span class="lbl">PULSO</span>
+          <span class="val" id="pill-wrist" style="color:var(--green)">0°</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAINEL LATERAL ── -->
+    <div class="panel">
+
+      <!-- Controle manual por sliders -->
+      <div class="psec">
+        <div class="psec-title">Controle Manual</div>
+
+        <div class="srow">
+          <div class="srow-lbl">
+            Ombro
+            <span id="lbl-s" style="color:var(--accent)">90°</span>
+          </div>
+          <input type="range" class="s-shoulder" id="sl-s" min="0" max="180" value="90"/>
+        </div>
+
+        <div class="srow">
+          <div class="srow-lbl">
+            Cotovelo
+            <span id="lbl-e" style="color:var(--purple)">45°</span>
+          </div>
+          <input type="range" class="s-elbow" id="sl-e" min="0" max="150" value="45"/>
+        </div>
+
+        <div class="srow">
+          <div class="srow-lbl">
+            Pulso
+            <span id="lbl-w" style="color:var(--green)">0°</span>
+          </div>
+          <input type="range" class="s-wrist" id="sl-w" min="-45" max="45" value="0"/>
+        </div>
+      </div>
+
+      <!-- Exercícios de fisioterapia -->
+      <div class="psec">
+        <div class="psec-title">Exercícios</div>
+        <div class="ex-grid">
+          <button class="btn" id="btn-fe" onclick="runEx('flexaoOmbro')">Flexão<br/>Ombro</button>
+          <button class="btn" id="btn-fc" onclick="runEx('flexaoCotovelo')">Flexão<br/>Cotovelo</button>
+          <button class="btn" id="btn-rc" onclick="runEx('rotacaoCompleta')">Rotação<br/>Completa</button>
+          <button class="btn" id="btn-rg" onclick="runEx('reabilitacao')">Reabilitação<br/>Gradual</button>
+          <button class="btn wide reset" onclick="resetArm()">⟳ Posição Inicial</button>
+        </div>
+      </div>
+
+      <!-- Simulação de comandos remotos do fisioterapeuta -->
+      <div class="psec">
+        <div class="psec-title">Fisioterapeuta Remoto</div>
+        <div class="remote-row">
+          <input type="text" id="cmd-in" placeholder="SET_SHOULDER 120"/>
+          <button onclick="sendCmd()">TX</button>
+        </div>
+        <div class="cmd-hint">
+          SET_SHOULDER [0–180]<br/>
+          SET_ELBOW [0–150]<br/>
+          SET_WRIST [−45–45]<br/>
+          RUN_EXERCISE [nome]<br/>
+          RESET
+        </div>
+      </div>
+
+      <!-- Log de eventos do sistema -->
+      <div class="psec" style="flex:1">
+        <div class="psec-title">Log do Sistema</div>
+        <div id="log"></div>
+      </div>
+
+    </div><!-- /panel -->
+  </div><!-- /body -->
+
+  <!-- ══════════════════════════
+       RODAPÉ DE STATUS
+  ══════════════════════════ -->
+  <footer>
+    <div class="fi">
+      <div class="fi-dot" id="f-dot"></div>
+      <span id="f-txt">IDLE</span>
+    </div>
+  
+  </footer>
+
+</div><!-- /app -->
+
+<!-- Three.js (biblioteca 3D) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- Lógica principal -->
+<script src="main.js"></script>
+
+</body>
+</html>

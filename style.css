@@ -1,0 +1,458 @@
+/* ══════════════════════════════════════════════════════
+ * style.css — BraçoBot 3D · Fisioterapia Remota
+ *
+ * Organização:
+ *   1. Variáveis globais (design tokens)
+ *   2. Reset e base
+ *   3. Layout principal (#app, .body)
+ *   4. Header
+ *   5. Área 3D e overlays
+ *   6. Painel lateral
+ *      6a. Sliders
+ *      6b. Botões de exercício
+ *      6c. Controle remoto
+ *      6d. Log
+ *   7. Footer
+ *   8. Animações
+ * ══════════════════════════════════════════════════════ */
+
+
+/* ─── 1. VARIÁVEIS GLOBAIS ─────────────────────────── */
+:root {
+  --bg:     #060a12;       /* fundo geral */
+  --panel:  #0d1420;       /* fundo do painel lateral */
+  --border: #1a2540;       /* bordas e separadores */
+  --accent: #00e5ff;       /* ciano — articulação ombro */
+  --purple: #a855f7;       /* roxo  — articulação cotovelo */
+  --green:  #22d3a0;       /* verde — articulação pulso / OK */
+  --orange: #fb923c;       /* laranja — aviso / reset */
+  --red:    #f43f5e;       /* vermelho — erro */
+  --text:   #dde6f0;       /* texto principal */
+  --muted:  #4a6080;       /* texto secundário / labels */
+  --mono:   'Space Mono', monospace;
+  --sans:   'Outfit', sans-serif;
+}
+
+
+/* ─── 2. RESET E BASE ──────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow: hidden;
+}
+
+
+/* ─── 3. LAYOUT PRINCIPAL ──────────────────────────── */
+
+/* Grade de 3 linhas: header | conteúdo | footer */
+#app {
+  display: grid;
+  grid-template-rows: 52px 1fr 36px;
+  height: 100vh;
+}
+
+/* Grade de 2 colunas: visualização 3D | painel */
+.body {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  overflow: hidden;
+}
+
+
+/* ─── 4. HEADER ────────────────────────────────────── */
+header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0, 229, 255, 0.025);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+/* Ponto pulsante indicador de status */
+.hdr-dot {
+  width: 9px;
+  height: 9px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--accent);
+  animation: blink 2.4s ease-in-out infinite;
+}
+
+header h1 {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+header h1 em {
+  color: var(--accent);
+  font-style: normal;
+}
+
+/* Espaçador flexível para empurrar itens à direita */
+.hdr-sep { flex: 1; }
+
+/* Badge de tecnologia */
+.hdr-tag {
+  font-family: var(--mono);
+  font-size: .6rem;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+
+/* Indicador de conexão ativa */
+.hdr-conn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: .6rem;
+  color: var(--green);
+}
+
+.hdr-conn::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--green);
+}
+
+
+/* ─── 5. ÁREA 3D E OVERLAYS ────────────────────────── */
+
+/* Container do canvas Three.js — ocupa todo o espaço disponível */
+#three-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* O canvas gerado pelo Three.js deve preencher o container */
+#three-container canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Labels sobrepostos ao canvas (instruções de uso) */
+.view-label {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: .6rem;
+  color: var(--muted);
+  pointer-events: none; /* não bloqueia cliques no canvas */
+}
+
+.view-label.tl { top: 14px; left: 16px; }
+.view-label.br { bottom: 14px; right: 16px; }
+
+/* Pills de ângulo — canto superior direito do canvas */
+.angle-pills {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.apill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(6, 10, 18, 0.75);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  backdrop-filter: blur(6px);
+}
+
+.apill .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.apill .lbl {
+  font-family: var(--mono);
+  font-size: .6rem;
+  color: var(--muted);
+}
+
+.apill .val {
+  font-family: var(--mono);
+  font-size: .75rem;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+
+/* ─── 6. PAINEL LATERAL ────────────────────────────── */
+.panel {
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--panel);
+}
+
+/* Seção genérica do painel */
+.psec {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Título de cada seção com marcador colorido */
+.psec-title {
+  font-family: var(--mono);
+  font-size: .58rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.psec-title::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: block;
+}
+
+
+/* ─── 6a. SLIDERS ──────────────────────────────────── */
+.srow { margin-bottom: 13px; }
+.srow:last-child { margin-bottom: 0; }
+
+.srow-lbl {
+  display: flex;
+  justify-content: space-between;
+  font-size: .78rem;
+  margin-bottom: 5px;
+}
+
+.srow-lbl span {
+  font-family: var(--mono);
+  font-size: .72rem;
+}
+
+/* Track comum a todos os sliders */
+input[type=range] {
+  width: 100%;
+  appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+
+/* Thumb colorido por articulação */
+.s-shoulder::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 7px var(--accent);
+  cursor: pointer;
+}
+
+.s-elbow::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--purple);
+  box-shadow: 0 0 7px var(--purple);
+  cursor: pointer;
+}
+
+.s-wrist::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 7px var(--green);
+  cursor: pointer;
+}
+
+
+/* ─── 6b. BOTÕES DE EXERCÍCIO ──────────────────────── */
+.ex-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+.btn {
+  font-family: var(--mono);
+  font-size: .62rem;
+  line-height: 1.45;
+  padding: 9px 6px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: all .18s;
+  text-align: center;
+}
+
+.btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0, 229, 255, 0.05);
+}
+
+/* Botão que ocupa as duas colunas do grid */
+.btn.wide { grid-column: span 2; }
+
+/* Estilo de hover para o botão de reset */
+.btn.reset:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+/* Estilo quando um exercício está sendo executado */
+.btn.running {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(34, 211, 160, 0.07);
+}
+
+
+/* ─── 6c. CONTROLE REMOTO ──────────────────────────── */
+.remote-row {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 8px;
+}
+
+.remote-row input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 9px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: .68rem;
+  outline: none;
+}
+
+.remote-row input:focus {
+  border-color: var(--accent);
+}
+
+.remote-row button {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-family: var(--mono);
+  font-size: .68rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+
+.remote-row button:hover { opacity: .82; }
+
+/* Dica de comandos disponíveis */
+.cmd-hint {
+  font-family: var(--mono);
+  font-size: .62rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+
+/* ─── 6d. LOG ──────────────────────────────────────── */
+#log {
+  font-family: var(--mono);
+  font-size: .64rem;
+  color: var(--muted);
+  height: 148px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse; /* entradas mais recentes no topo */
+  gap: 1px;
+}
+
+/* Entrada genérica do log */
+.le {
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* Cores por tipo de mensagem */
+.le.info   { color: var(--accent); }
+.le.ok     { color: var(--green); }
+.le.warn   { color: var(--orange); }
+.le.err    { color: var(--red); }
+.le.remote { color: var(--purple); }
+
+
+/* ─── 7. FOOTER ────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-family: var(--mono);
+  font-size: .58rem;
+  color: var(--muted);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.fi {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Indicador de status no footer */
+.fi-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 5px var(--green);
+}
+
+.fi-dot.busy {
+  background: var(--orange);
+  box-shadow: 0 0 5px var(--orange);
+  animation: blink .8s infinite;
+}
+
+
+/* ─── 8. ANIMAÇÕES ─────────────────────────────────── */
+
+/* Pulsação usada no .hdr-dot e .fi-dot.busy */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  55%       { opacity: .2; }
+}
